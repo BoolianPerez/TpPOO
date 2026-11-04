@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia
+package com.tppoo.model.competencia;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,7 +26,25 @@ public class Club {
     }
 
     public Sponsor obtenerSponsorPrincipal() {
+        LocalDate hoy = LocalDate.now();
+        for (Patrocinio patrocinio : patrocinios) {
+            if (patrocinio.isEsPrincipal() && patrocinio.estaVigente(hoy)) {
+                return patrocinio.getSponsor();
+            }
+        }
         return null;
+    }
+
+    public void agregarPatrocinio(Patrocinio nuevoPatrocinio) {
+        if (nuevoPatrocinio.isEsPrincipal()) {
+            LocalDate hoy = LocalDate.now();
+            for (Patrocinio p : patrocinios) {
+                if (p.isEsPrincipal() && p.estaVigente(hoy)) {
+                    throw new IllegalStateException("RN06: El club ya cuenta con un sponsor principal vigente.");
+                }
+            }
+        }
+        this.patrocinios.add(nuevoPatrocinio);
     }
 
     public String getNombre() {
@@ -76,4 +94,4 @@ public class Club {
     public void setPatrocinios(List<Patrocinio> patrocinios) {
         this.patrocinios = patrocinios;
     }
-}
+}}

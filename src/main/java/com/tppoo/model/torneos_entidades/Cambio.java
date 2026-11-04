@@ -1,12 +1,28 @@
-package com.tppoo.model.competencia
+package com.tppoo.model.competencia;
 
 public class Cambio extends Evento {
     private Jugador jugadorEntra;
     private Jugador jugadorSale;
 
+    public Cambio() {
+        super();
+    }
+
+    public Cambio(Jugador jugadorInvolucrado, Partido partido, int minuto, Jugador jugadorEntra, Jugador jugadorSale) {
+        super(jugadorInvolucrado, partido, minuto);
+        this.jugadorEntra = jugadorEntra;
+        this.jugadorSale = jugadorSale;
+    }
+
     @Override
     public void procesar() {
-        // TODO: aplicar logica de cambio.
+        if (jugadorSale != null) {
+            jugadorSale.setNoPuedeReingresar(true);
+        }
+
+        if (jugadorEntra != null) {
+            jugadorEntra.setEnCancha(true);
+        }
     }
 
     public Jugador getJugadorEntra() {

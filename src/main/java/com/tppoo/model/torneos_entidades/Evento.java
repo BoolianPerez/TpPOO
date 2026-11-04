@@ -1,9 +1,18 @@
-package com.tppoo.model.competencia
+package com.tppoo.model.competencia;
 
 public abstract class Evento {
     private Jugador jugadorInvolucrado;
     private Partido partido;
     private int minuto;
+
+    public Evento() {
+    }
+
+    public Evento(Jugador jugadorInvolucrado, Partido partido, int minuto) {
+        this.jugadorInvolucrado = jugadorInvolucrado;
+        this.partido = partido;
+        this.minuto = minuto;
+    }
 
     public abstract void procesar();
 
@@ -30,4 +39,5 @@ public abstract class Evento {
     public void setMinuto(int minuto) {
         this.minuto = minuto;
     }
+}
 }

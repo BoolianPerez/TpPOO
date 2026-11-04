@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia
+package com.tppoo.model.competencia;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,18 +18,46 @@ public class Partido {
     private List<Evento> eventos = new ArrayList<>();
 
     public Partido() {
+        this.marcadorLocal = 0;
+        this.marcadorVisitante = 0;
+        this.estado = EstadoPartido.PROGRAMADO;
     }
 
     public void iniciar() {
-        // TODO: inicializar partido.
+        if (this.estado == EstadoPartido.PROGRAMADO) {
+            this.estado = EstadoPartido.EN_JUEGO;
+        } else {
+            throw new IllegalStateException("El partido solo se puede iniciar si está en estado PROGRAMADO.");
+        }
     }
 
     public void registrarEvento(Evento evento) {
+        if (this.estado != EstadoPartido.EN_JUEGO) {
+            throw new IllegalStateException("RN08: Los eventos únicamente pueden registrarse cuando el partido está EN_JUEGO.");
+        }
+
+        if (evento.getMinuto() < 0 || evento.getMinuto() > 120) {
+            throw new IllegalArgumentException("RN08: El minuto del evento debe estar entre 0 y 120.");
+        }
+
         this.eventos.add(evento);
+
+        if (evento instanceof Gol) {
+            Gol gol = (Gol) evento;
+            if (gol.getClubAnotador().equals(this.clubLocal)) {
+                this.marcadorLocal++;
+            } else if (gol.getClubAnotador().equals(this.clubVisitante)) {
+                this.marcadorVisitante++;
+            }
+        }
     }
 
     public void finalizar() {
-        // TODO: finalizar partido.
+        if (this.estado == EstadoPartido.EN_JUEGO) {
+            this.estado = EstadoPartido.FINALIZADO;
+        } else {
+            throw new IllegalStateException("Solo se puede finalizar un partido que esté EN_JUEGO.");
+        }
     }
 
     public int getMarcadorVisitante() {
