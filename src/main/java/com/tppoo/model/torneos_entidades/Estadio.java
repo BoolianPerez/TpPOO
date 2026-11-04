@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia;
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -14,7 +14,6 @@ public class Estadio {
     private String provincia;
     private List<String> ubicacionesDisponibles = new ArrayList<>();
 
-    // Relación con los partidos que aloja el estadio para validar superposiciones (RN03)
     private List<Partido> partidos = new ArrayList<>();
 
     public Estadio() {
@@ -35,10 +34,8 @@ public class Estadio {
         }
 
         for (Partido partido : partidos) {
-            // Calculamos la diferencia absoluta en minutos entre el partido existente y el nuevo horario
             long diferenciaMinutos = Math.abs(ChronoUnit.MINUTES.between(partido.getFechaHora(), fechaHoraNueva));
 
-            // Si hay menos de 3 horas (180 minutos) de diferencia, no está disponible
             if (diferenciaMinutos < 180) {
                 return false;
             }

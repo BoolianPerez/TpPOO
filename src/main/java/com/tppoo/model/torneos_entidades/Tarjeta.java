@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia;
+package com.tppoo.model.torneos_entidades;
 
 public class Tarjeta extends Evento {
     private ColorTarjeta color;

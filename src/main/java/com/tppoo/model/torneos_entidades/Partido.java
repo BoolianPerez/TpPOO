@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia;
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

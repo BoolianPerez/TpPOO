@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia;
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
 
@@ -6,7 +6,7 @@ public class Patrocinio {
     private double monto;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
-    private boolean esPrincipal; // Requerido para verificar el sponsor principal (RN06)
+    private boolean esPrincipal;
     private Sponsor sponsor;
 
     public Patrocinio() {

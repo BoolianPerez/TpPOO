@@ -1,7 +1,7 @@
 package com.tppoo.controller;
 
-import com.tppoo.model.Evento;
-import com.tppoo.model.Partido;
+import com.tppoo.model.torneos_entidades.Evento;
+import com.tppoo.model.torneos_entidades.Partido;
 
 public class ControladorPartidos {
     private Partido partidoActual;

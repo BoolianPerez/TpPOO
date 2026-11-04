@@ -1,4 +1,4 @@
-package com.tppoo.model.competencia;
+package com.tppoo.model.torneos_entidades;
 
 public abstract class Evento {
     private Jugador jugadorInvolucrado;
@@ -39,5 +39,4 @@ public abstract class Evento {
     public void setMinuto(int minuto) {
         this.minuto = minuto;
     }
-}
 }
