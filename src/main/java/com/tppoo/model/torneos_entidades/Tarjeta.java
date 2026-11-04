@@ -20,7 +20,7 @@ public class Tarjeta extends Evento {
 
             if (color == ColorTarjeta.AMARILLA) {
                 long amarillasEnPartido = getPartido().getEventos().stream()
-                        .filter(e -> e instanceof Tarjeta && e.getJugadorInvolucrado().equals(jugador))
+                        .filter(e -> e instanceof Tarjeta && e.getJugadorInvolucrado() == jugador)
                         .map(e -> (Tarjeta) e)
                         .filter(t -> t.getColor() == ColorTarjeta.AMARILLA)
                         .count();
