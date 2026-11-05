@@ -1,7 +1,10 @@
-package com.tppoo.model.notificaciones
+package com.tppoo.model.servicios;
 
 public class ServicioNotificaciones {
+
     public void enviarNotificacion(String mensaje, Suscriptor suscriptor) {
-        // TODO: integrar con canales habituales del suscriptor.
+        if (suscriptor != null && mensaje != null && !mensaje.trim().isEmpty()) {
+            suscriptor.recibirNotificacion(mensaje);
+        }
     }
 }

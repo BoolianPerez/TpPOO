@@ -1,4 +1,4 @@
-package com.tppoo.model.notificaciones
+package com.tppoo.model.servicios;
 
 public interface CanalNotificacion {
     void enviar(String mensaje);
