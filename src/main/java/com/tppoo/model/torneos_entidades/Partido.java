@@ -23,6 +23,8 @@ public class Partido {
         this.estado = EstadoPartido.PROGRAMADO;
     }
 
+
+
     public void iniciar() {
         if (this.estado == EstadoPartido.PROGRAMADO) {
             this.estado = EstadoPartido.EN_JUEGO;

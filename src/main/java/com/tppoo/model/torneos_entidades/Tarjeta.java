@@ -16,7 +16,7 @@ public class Tarjeta extends Evento {
     public void procesar() {
         if (getJugadorInvolucrado() != null) {
             Jugador jugador = getJugadorInvolucrado();
-            jugador.agregarTarjeta(this);
+            jugador.setTarjetas(this);
 
             if (color == ColorTarjeta.AMARILLA) {
                 long amarillasEnPartido = getPartido().getEventos().stream()

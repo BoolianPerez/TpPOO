@@ -1,4 +1,8 @@
-package com.tppoo.model
+package com.tppoo.model;
+
+import com.tppoo.model.torneos_entidades.Club;
+import com.tppoo.model.torneos_entidades.Partido;
+import com.tppoo.model.torneos_entidades.Torneo;
 
 import java.util.ArrayList;
 import java.util.List;
