@@ -1,4 +1,4 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
 
@@ -16,6 +16,18 @@ public abstract class Persona {
         this.nombre = nombre;
         this.apellido = apellido;
         this.fechaNacimiento = fechaNacimiento;
+    }
+    public int calcularEdad() {
+        if (fechaNacimiento == null) {
+            return 0;
+        }
+        LocalDate hoy = LocalDate.now();
+        int edad = hoy.getYear() - fechaNacimiento.getYear();
+
+        if (hoy.getDayOfYear() < fechaNacimiento.getDayOfYear()) {
+            edad--;
+        }
+        return edad;
     }
 
     public String obtenerDetalle() {
