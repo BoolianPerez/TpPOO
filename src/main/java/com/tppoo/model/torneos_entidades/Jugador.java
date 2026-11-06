@@ -1,6 +1,8 @@
 package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Jugador extends Persona {
     private String posicion;
@@ -9,6 +11,7 @@ public class Jugador extends Persona {
     private int partidosJugados;
     private int goles;
     private int tarjetas;
+    private List<Contrato> historialContratos = new ArrayList<>();
 
     public Jugador() {
     }
@@ -27,7 +30,17 @@ public class Jugador extends Persona {
     }
 
     public void registrarPagoPorClub(Contrato contrato) {
-        // TODO: registrar pago asociado al contrato del jugador.
+        if (contrato != null) {
+            this.historialContratos.add(contrato);
+        }
+    }
+
+    public void registrarEstadisticasPartido(boolean jugo, int golesAnotados, int tarjetasRecibidas) {
+        if (jugo) {
+            this.partidosJugados++;
+        }
+        this.goles += golesAnotados;
+        this.tarjetas += tarjetasRecibidas;
     }
 
     public String getPosicion() {
