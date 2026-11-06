@@ -15,9 +15,6 @@ public class Remate extends Evento {
     @Override
     public void procesar() {
         double valorXG = calcularXG();
-        if (getJugadorInvolucrado() != null) {
-            getJugadorInvolucrado().acumularXG(valorXG);
-        }
     }
 
     public double calcularXG() {
