@@ -1,10 +1,11 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
 
 public class Entrenador extends Persona {
     private String licencia;
     private EspecialidadEntrenador especialidad;
+    private boolean licenciaActiva;
 
     public Entrenador() {
     }
@@ -13,11 +14,15 @@ public class Entrenador extends Persona {
         super(dni, nombre, apellido, fechaNacimiento);
         this.licencia = licencia;
         this.especialidad = especialidad;
+        this.licenciaActiva = licenciaActiva;
     }
 
     @Override
     public String obtenerDetalle() {
         return "Entrenador: " + super.obtenerDetalle();
+    }
+    public boolean validarLicencia() {
+        return this.licenciaActiva && this.licencia != null && !this.licencia.trim().isEmpty();
     }
 
     public String getLicencia() {
@@ -35,4 +40,8 @@ public class Entrenador extends Persona {
     public void setEspecialidad(EspecialidadEntrenador especialidad) {
         this.especialidad = especialidad;
     }
+
+    public boolean isLicenciaActiva() {return licenciaActiva;}
+
+    public void setLicenciaActiva(boolean licenciaActiva) {this.licenciaActiva = licenciaActiva;}
 }
