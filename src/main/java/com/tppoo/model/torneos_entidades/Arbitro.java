@@ -1,10 +1,21 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class Arbitro extends Persona {
     private String colegio;
     private CategoriaArbitro categoria;
+    private String clubHincha;
+
+
+    public String getClubhincha() {
+        return clubHincha;
+    }
+
+    public void setClubhincha(String clubhincha) {
+        this.clubHincha = clubHincha;
+    }
 
     public Arbitro() {
     }
@@ -13,11 +24,23 @@ public class Arbitro extends Persona {
         super(dni, nombre, apellido, fechaNacimiento);
         this.colegio = colegio;
         this.categoria = categoria;
+        this.clubHincha = clubHincha;
     }
 
     @Override
     public String obtenerDetalle() {
         return "Arbitro: " + super.obtenerDetalle();
+    }
+    public boolean verificarDisponibilidad(LocalDate fechaPartido, String nombreClubOponente, List<LocalDate> fechasPartidosAsignados) {
+        if (this.clubHincha != null && this.clubHincha.equalsIgnoreCase(nombreClubOponente)) {
+            return false;
+        }
+
+        if (fechasPartidosAsignados != null && fechasPartidosAsignados.contains(fechaPartido)) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean verificarDisponibilidad(LocalDate fecha) {
