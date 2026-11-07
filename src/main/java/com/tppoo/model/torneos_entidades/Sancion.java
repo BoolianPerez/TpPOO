@@ -8,13 +8,23 @@ public class Sancion {
     private Torneo torneo;
     private int partidosPendientes;
     private String motivo;
+    private Partido partidoOrigen;
 
     public Sancion(Jugador jugador, Torneo torneo,
-                   int partidosPendientes, String motivo) {
+                   int partidosPendientes, String motivo,
+                   Partido partidoOrigen) {
         this.jugador = Objects.requireNonNull(jugador);
         this.torneo = Objects.requireNonNull(torneo);
+        this.partidoOrigen = Objects.requireNonNull(partidoOrigen);
+
+        if (partidosPendientes <= 0) {
+            throw new IllegalArgumentException(
+                    "La sanción debe tener al menos un partido pendiente."
+            );
+        }
+
         this.partidosPendientes = partidosPendientes;
-        this.motivo = motivo;
+        this.motivo = Objects.requireNonNull(motivo);
     }
 
     public boolean estaVigente() {
@@ -41,5 +51,9 @@ public class Sancion {
 
     public String getMotivo() {
         return motivo;
+    }
+
+    public Partido getPartidoOrigen() {
+        return partidoOrigen;
     }
 }

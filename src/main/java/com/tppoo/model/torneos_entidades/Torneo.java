@@ -118,12 +118,18 @@ public class Torneo {
 
     public void generarPartido(Club clubLocal, Club clubVisitante, LocalDate fecha) {
         if (clubLocal != null && clubVisitante != null) {
-            Partido nuevoPartido = new Partido(clubLocal, clubVisitante, fecha);
+            Partido nuevoPartido = new Partido(clubLocal, clubVisitante, fecha, this);
             this.partidos.add(nuevoPartido);
         }
     }
 
     public void agregarSancion(Sancion sancion) {
+        if (sancion == null || sancion.getTorneo() != this) {
+            throw new IllegalArgumentException(
+                    "La sanción no pertenece a este torneo."
+            );
+        }
+
         sanciones.add(sancion);
     }
 
@@ -132,6 +138,10 @@ public class Torneo {
     }
 
     public boolean jugadorEstaSuspendido(Jugador jugador) {
+        if (jugador == null) {
+            return false;
+        }
+
         for (Sancion sancion : sanciones) {
             if (sancion.getJugador().equals(jugador)
                     && sancion.estaVigente()) {
@@ -139,6 +149,60 @@ public class Torneo {
             }
         }
         return false;
+    }
+
+    public InscripcionClub buscarInscripcion(Jugador jugador) {
+        for (InscripcionClub inscripcion : inscripciones) {
+            if (inscripcion.tieneJugador(jugador)) {
+                return inscripcion;
+            }
+        }
+
+        return null;
+    }
+
+    public InscripcionClub buscarInscripcion(Club club) {
+        for (InscripcionClub inscripcion : inscripciones) {
+            if (inscripcion.getClub().equals(club)) {
+                return inscripcion;
+            }
+        }
+
+        return null;
+    }
+
+    public void cumplirSancionesDelPartido(Partido partido) {
+
+        if (partido.getEstado() != EstadoPartido.FINALIZADO) {
+            throw new IllegalStateException(
+                    "Solo se pueden cumplir sanciones al finalizar un partido."
+            );
+        }
+
+        for (Sancion sancion : sanciones) {
+
+            if (!sancion.estaVigente()) {
+                continue;
+            }
+
+            if (sancion.getPartidoOrigen() == partido) {
+                continue;
+            }
+
+            InscripcionClub inscripcion =
+                    buscarInscripcion(sancion.getJugador());
+
+            if (inscripcion == null) {
+                continue;
+            }
+
+            Club clubJugador = inscripcion.getClub();
+
+            if (clubJugador.equals(partido.getClubLocal())
+                    || clubJugador.equals(partido.getClubVisitante())) {
+                sancion.cumplirPartido();
+            }
+        }
     }
 
     public EstadoTorneo getEstado() {

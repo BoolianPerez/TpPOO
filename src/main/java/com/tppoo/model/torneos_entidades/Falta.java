@@ -12,8 +12,18 @@ public class Falta extends Evento {
 
     @Override
     public void procesar() {
-        if (getJugadorInvolucrado() != null) {
-            getJugadorInvolucrado().incrementarFaltasCometidas();
+        if (estaProcesado()) {
+            return;
         }
+
+        if (getJugadorInvolucrado() == null || getPartido() == null) {
+            throw new IllegalStateException(
+                    "La falta debe tener un jugador y un partido asociados."
+            );
+        }
+
+        getJugadorInvolucrado().incrementarFaltasCometidas();
+
+        marcarProcesado();
     }
 }

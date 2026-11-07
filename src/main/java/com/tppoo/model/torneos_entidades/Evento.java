@@ -4,6 +4,7 @@ public abstract class Evento {
     private Jugador jugadorInvolucrado;
     private Partido partido;
     private int minuto;
+    private boolean procesado = false;
 
     public Evento() {
     }
@@ -38,5 +39,13 @@ public abstract class Evento {
 
     public void setMinuto(int minuto) {
         this.minuto = minuto;
+    }
+
+    public boolean estaProcesado() {
+        return procesado;
+    }
+
+    protected void marcarProcesado() {
+        this.procesado = true;
     }
 }

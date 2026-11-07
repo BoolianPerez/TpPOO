@@ -14,29 +14,46 @@ public class Gol extends Evento {
         this.clubAnotador = clubAnotador;
     }
 
+
     @Override
     public void procesar() {
-        if (getPartido() != null && clubAnotador != null) {
-            boolean esLocal = clubAnotador.equals(getPartido().getClubLocal());
-
-            if (tipo != TipoGol.EN_CONTRA) {
-                if (esLocal) {
-                    getPartido().setMarcadorLocal(getPartido().getMarcadorLocal() + 1);
-                } else {
-                    getPartido().setMarcadorVisitante(getPartido().getMarcadorVisitante() + 1);
-                }
-            } else {
-                if (esLocal) {
-                    getPartido().setMarcadorVisitante(getPartido().getMarcadorVisitante() + 1);
-                } else {
-                    getPartido().setMarcadorLocal(getPartido().getMarcadorLocal() + 1);
-                }
-            }
-
-            if (getJugadorInvolucrado() != null && tipo != TipoGol.EN_CONTRA) {
-                getJugadorInvolucrado().incrementarGoles();
-            }
+        if (estaProcesado()) {
+            return;
         }
+
+        Partido partido = getPartido();
+        Jugador jugador = getJugadorInvolucrado();
+
+        if (partido == null || clubAnotador == null || tipo == null) {
+            throw new IllegalStateException(
+                    "El gol debe tener partido, club anotador y tipo asociados."
+            );
+        }
+
+        boolean esLocal = clubAnotador.equals(partido.getClubLocal());
+        boolean esVisitante = clubAnotador.equals(partido.getClubVisitante());
+
+        if (!esLocal && !esVisitante) {
+            throw new IllegalArgumentException(
+                    "El club anotador no participa en este partido."
+            );
+        }
+
+        boolean golParaLocal =
+                (tipo != TipoGol.EN_CONTRA && esLocal)
+                        || (tipo == TipoGol.EN_CONTRA && esVisitante);
+
+        if (golParaLocal) {
+            partido.setMarcadorLocal(partido.getMarcadorLocal() + 1);
+        } else {
+            partido.setMarcadorVisitante(partido.getMarcadorVisitante() + 1);
+        }
+
+        if (jugador != null && tipo != TipoGol.EN_CONTRA) {
+            jugador.setGoles(jugador.getGoles() + 1);
+        }
+
+        marcarProcesado();
     }
 
     public TipoGol getTipo() {

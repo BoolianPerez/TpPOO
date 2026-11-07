@@ -12,6 +12,7 @@ public class Jugador extends Persona {
     private int goles;
     private int tarjetas;
     private List<Contrato> historialContratos = new ArrayList<>();
+    private int faltasCometidas;
 
     public Jugador() {
     }
@@ -22,6 +23,7 @@ public class Jugador extends Persona {
         this.posicion = posicion;
         this.numeroCamiseta = numeroCamiseta;
         this.valorMercado = valorMercado;
+        faltasCometidas = 0;
     }
 
     @Override
@@ -89,5 +91,13 @@ public class Jugador extends Persona {
 
     public void setTarjetas(int tarjetas) {
         this.tarjetas = tarjetas;
+    }
+
+    public int getFaltasCometidas() {
+        return faltasCometidas;
+    }
+
+    public void incrementarFaltasCometidas() {
+        this.faltasCometidas++;
     }
 }

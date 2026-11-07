@@ -16,14 +16,23 @@ public class Cambio extends Evento {
 
     @Override
     public void procesar() {
-        if (jugadorSale != null) {
-            jugadorSale.setNoPuedeReingresar(true);
+        if (estaProcesado()) {
+            return;
         }
 
-        if (jugadorEntra != null) {
-            jugadorEntra.setEnCancha(true);
+        Partido partido = getPartido();
+
+        if (partido == null || jugadorEntra == null || jugadorSale == null) {
+            throw new IllegalStateException(
+                    "El cambio debe tener partido, jugador entrante y jugador saliente."
+            );
         }
+
+        partido.registrarCambio(jugadorSale, jugadorEntra);
+
+        marcarProcesado();
     }
+
 
     public Jugador getJugadorEntra() {
         return jugadorEntra;
