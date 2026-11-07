@@ -13,6 +13,13 @@ public class Contrato {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
+    public boolean esVigenteEn(LocalDate fecha) {
+        if (fechaInicio == null) return false;
+        if (fechaFin == null) {
+            return !fecha.isBefore(fechaInicio);
+        }
+        return (!fecha.isBefore(fechaInicio) && !fecha.isAfter(fechaFin));
+    }
 
     public LocalDate getFechaInicio() {
         return fechaInicio;

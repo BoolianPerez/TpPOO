@@ -94,4 +94,4 @@ public class Club {
     public void setPatrocinios(List<Patrocinio> patrocinios) {
         this.patrocinios = patrocinios;
     }
-}}
+}

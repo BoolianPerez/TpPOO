@@ -14,15 +14,36 @@ public class Torneo {
     private List<Club> clubes = new ArrayList<>();
     private List<Partido> partidos = new ArrayList<>();
     private List<Sancion> sanciones = new ArrayList<>();
+    private List<InscripcionClub> inscripciones = new ArrayList<>();
 
     public Torneo() {
         this.estado = EstadoTorneo.PLANIFICADO;
     }
 
-    public void inscribirClub(Club club) {
-        if (club != null && !clubes.contains(club)) {
-            this.clubes.add(club);
+    public InscripcionClub inscribirClub(Club club) {
+
+        if (estado != EstadoTorneo.PLANIFICADO) {
+            throw new IllegalStateException(
+                    "No se pueden inscribir clubes una vez iniciado el torneo."
+            );
         }
+
+        if (clubes.contains(club)) {
+            throw new IllegalArgumentException(
+                    "El club ya está inscripto en este torneo."
+            );
+        }
+
+        InscripcionClub inscripcion = new InscripcionClub(club, this);
+
+        inscripciones.add(inscripcion);
+        clubes.add(club);
+
+        return inscripcion;
+    }
+
+    public void agregarInscripcion(InscripcionClub inscripcion) {
+        this.inscripciones.add(inscripcion);
     }
 
     public void generarFixture() {
@@ -69,14 +90,29 @@ public class Torneo {
     }
 
     public void avanzarEstado() {
-        if (this.estado == EstadoTorneo.PLANIFICADO) {
-            this.estado = EstadoTorneo.EN_CURSO;
-            System.out.println("El torneo ha comenzado (Estado: EN_CURSO).");
-        } else if (this.estado == EstadoTorneo.EN_CURSO) {
-            this.estado = EstadoTorneo.FINALIZADO;
-            System.out.println("El torneo ha finalizado (Estado: FINALIZADO).");
-        } else {
-            System.out.println("El torneo ya se encuentra finalizado.");
+        if (estado == EstadoTorneo.PLANIFICADO) {
+
+            if (inscripciones.isEmpty()) {
+                throw new IllegalStateException(
+                        "El torneo debe tener clubes inscriptos."
+                );
+            }
+
+            for (InscripcionClub inscripcion : inscripciones) {
+
+                if (!inscripcion.plantelValido()) {
+                    throw new IllegalStateException(
+                            "El club " + inscripcion.getClub().getNombre()
+                                    + " no tiene un plantel válido (debe tener entre 18 y 30 jugadores)."
+                    );
+                }
+            }
+
+            estado = EstadoTorneo.EN_CURSO;
+
+        } else if (estado == EstadoTorneo.EN_CURSO) {
+
+            estado = EstadoTorneo.FINALIZADO;
         }
     }
 
@@ -151,5 +187,13 @@ public class Torneo {
 
     public void setPartidos(List<Partido> partidos) {
         this.partidos = partidos;
+    }
+
+    public List<InscripcionClub> getInscripciones() {
+        return inscripciones;
+    }
+
+    public void setInscripciones(List<InscripcionClub> inscripciones) {
+        this.inscripciones = inscripciones;
     }
 }
