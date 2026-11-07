@@ -1,5 +1,6 @@
 package com.tppoo.model.torneos_entidades;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +17,23 @@ public class Partido {
     private Arbitro asistente2;
     private Estadio estadio;
     private List<Evento> eventos = new ArrayList<>();
+    private List<Jugador> jugadoresExpulsados = new ArrayList<>();
 
     public Partido() {
         this.marcadorLocal = 0;
         this.marcadorVisitante = 0;
         this.estado = EstadoPartido.PROGRAMADO;
+    }
+
+    public Partido(Club clubLocal, Club clubVisitante, LocalDate fecha) {
+        this.marcadorLocal = 0;
+        this.marcadorVisitante = 0;
+        this.estado = EstadoPartido.PROGRAMADO;
+        this.clubLocal = clubLocal;
+        this.clubVisitante = clubVisitante;
+        if (fecha != null) {
+            this.fechaHora = fecha.atStartOfDay();
+        }
     }
 
     public void iniciar() {
@@ -58,6 +71,16 @@ public class Partido {
         } else {
             throw new IllegalStateException("Solo se puede finalizar un partido que esté EN_JUEGO.");
         }
+    }
+
+    public void expulsarJugador(Jugador jugador) {
+        if (!jugadoresExpulsados.contains(jugador)) {
+            jugadoresExpulsados.add(jugador);
+        }
+    }
+
+    public boolean jugadorFueExpulsado(Jugador jugador) {
+        return jugadoresExpulsados.contains(jugador);
     }
 
     public int getMarcadorVisitante() {

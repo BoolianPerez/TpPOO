@@ -1,4 +1,4 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
 
