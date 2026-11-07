@@ -14,7 +14,23 @@ public class Remate extends Evento {
 
     @Override
     public void procesar() {
-        double valorXG = calcularXG();
+        if (estaProcesado()) {
+            return;
+        }
+
+        if (getPartido() == null || getJugadorInvolucrado() == null) {
+            throw new IllegalStateException(
+                    "El remate debe tener un partido y un jugador asociados."
+            );
+        }
+
+        if (zona == null) {
+            throw new IllegalStateException(
+                    "El remate debe tener una zona definida."
+            );
+        }
+
+        marcarProcesado();
     }
 
     public double calcularXG() {

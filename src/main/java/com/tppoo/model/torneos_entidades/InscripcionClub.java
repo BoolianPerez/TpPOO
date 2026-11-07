@@ -1,8 +1,6 @@
 package com.tppoo.model.torneos_entidades;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class InscripcionClub {
 
@@ -11,12 +9,12 @@ public class InscripcionClub {
 
     private Club club;
     private Torneo torneo;
-    private List<Jugador> jugadores;
+    private List<Jugador> jugadores = new ArrayList<>();
+    private Map<Jugador, Integer> amarillasAcumuladas = new HashMap<>();
 
     public InscripcionClub(Club club, Torneo torneo) {
         this.club = Objects.requireNonNull(club);
         this.torneo = Objects.requireNonNull(torneo);
-        this.jugadores = new ArrayList<>();
     }
 
     public Club getClub() {
@@ -86,6 +84,30 @@ public class InscripcionClub {
                     "El jugador no pertenece a este plantel."
             );
         }
+    }
+
+    public int registrarAmarilla(Jugador jugador) {
+        Objects.requireNonNull(jugador);
+
+        if (!tieneJugador(jugador)) {
+            throw new IllegalArgumentException(
+                    "El jugador no pertenece a este plantel."
+            );
+        }
+
+        int cantidad = amarillasAcumuladas.getOrDefault(jugador, 0) + 1;
+
+        if (cantidad == 5) {
+            amarillasAcumuladas.put(jugador, 0);
+        } else {
+            amarillasAcumuladas.put(jugador, cantidad);
+        }
+
+        return cantidad;
+    }
+
+    public int getAmarillasAcumuladas(Jugador jugador) {
+        return amarillasAcumuladas.getOrDefault(jugador, 0);
     }
 
     public boolean tieneJugador(Jugador jugador) {

@@ -14,24 +14,70 @@ public class Tarjeta extends Evento {
 
     @Override
     public void procesar() {
-        if (getJugadorInvolucrado() != null) {
-            Jugador jugador = getJugadorInvolucrado();
-            jugador.setTarjetas(this);
-
-            if (color == ColorTarjeta.AMARILLA) {
-                long amarillasEnPartido = getPartido().getEventos().stream()
-                        .filter(e -> e instanceof Tarjeta && e.getJugadorInvolucrado() == jugador)
-                        .map(e -> (Tarjeta) e)
-                        .filter(t -> t.getColor() == ColorTarjeta.AMARILLA)
-                        .count();
-
-                if (amarillasEnPartido >= 2) {
-                    jugador.marcarExpulsado();
-                }
-            } else if (color == ColorTarjeta.ROJA) {
-                jugador.marcarExpulsado();
-            }
+        if (estaProcesado()) {
+            return;
         }
+        Jugador jugador = getJugadorInvolucrado();
+        Partido partido = getPartido();
+
+        if (jugador == null || partido == null) {
+            throw new IllegalStateException(
+                    "La tarjeta debe tener un jugador y un partido asociados."
+            );
+        }
+
+        Torneo torneo = partido.getTorneo();
+
+        if (torneo == null) {
+            throw new IllegalStateException(
+                    "El partido no está asociado a un torneo."
+            );
+        }
+
+        InscripcionClub inscripcion = torneo.buscarInscripcion(jugador);
+
+        if (inscripcion == null) {
+            throw new IllegalArgumentException(
+                    "El jugador no pertenece a ningún club del torneo."
+            );
+        }
+
+        if (color == null) {
+            throw new IllegalStateException(
+                    "La tarjeta debe tener un color."
+            );
+        }
+
+        if (color == ColorTarjeta.AMARILLA) {
+
+            int amarillasAcumuladas = inscripcion.registrarAmarilla(jugador);
+
+            if (amarillasAcumuladas == 5) {
+                torneo.agregarSancion(
+                        new Sancion(jugador, torneo, 1, "Acumulación de cinco amarillas", partido)
+                );
+            }
+
+            long amarillasEnPartido = partido.getEventos().stream()
+                    .filter(e -> e instanceof Tarjeta)
+                    .map(e -> (Tarjeta) e)
+                    .filter(t -> t.getJugadorInvolucrado() == jugador)
+                    .filter(t -> t.getColor() == ColorTarjeta.AMARILLA)
+                    .count();
+
+            if (amarillasEnPartido >= 2) {
+                partido.expulsarJugador(jugador);
+            }
+
+        } else if (color == ColorTarjeta.ROJA) {
+
+            partido.expulsarJugador(jugador);
+
+            torneo.agregarSancion(
+                    new Sancion(jugador, torneo, 1, "Tarjeta roja directa", partido)
+            );
+        }
+        marcarProcesado();
     }
 
     public ColorTarjeta getColor() {
