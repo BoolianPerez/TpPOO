@@ -1,5 +1,7 @@
 package com.tppoo.model.torneos_entidades;
 
+import com.tppoo.model.torneos_entidades.EstadoTorneo;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,11 @@ public class Torneo {
     private LocalDate fechaFin;
     private List<Club> clubes = new ArrayList<>();
     private List<Partido> partidos = new ArrayList<>();
+    private List<Sancion> sanciones = new ArrayList<>();
     private List<InscripcionClub> inscripciones = new ArrayList<>();
 
     public Torneo() {
+        this.estado = EstadoTorneo.PLANIFICADO;
     }
 
     public InscripcionClub inscribirClub(Club club) {
@@ -43,7 +47,46 @@ public class Torneo {
     }
 
     public void generarFixture() {
-        // TODO: generar calendario del torneo.
+        if (clubes == null || clubes.size() < 2) {
+            System.out.println("No hay suficientes clubes inscriptos para generar el fixture.");
+            return;
+        }
+
+        List<Club> listaEquipos = new ArrayList<>(clubes);
+
+        boolean esImpar = listaEquipos.size() % 2 != 0;
+        if (esImpar) {
+            listaEquipos.add(null);
+        }
+
+        int totalClubes = listaEquipos.size();
+        int totalFechas = totalClubes - 1;
+        int partidosPorFecha = totalClubes / 2;
+
+        LocalDate fechaActual;
+        if (this.fechaInicio != null) {
+            fechaActual = this.fechaInicio;
+        } else {
+            fechaActual = LocalDate.now();
+        }
+
+        for (int f = 0; f < totalFechas; f++) {
+            for (int i = 0; i < partidosPorFecha; i++) {
+                Club local = listaEquipos.get(i);
+                Club visitante = listaEquipos.get(totalClubes - 1 - i);
+
+                if (local != null && visitante != null) {
+                    generarPartido(local, visitante, fechaActual);
+                }
+            }
+
+            Club ultimo = listaEquipos.remove(listaEquipos.size() - 1);
+            listaEquipos.add(1, ultimo);
+
+            fechaActual = fechaActual.plusDays(7);
+        }
+
+        System.out.println("¡Fixture generado con éxito! Total de partidos creados: " + partidos.size());
     }
 
     public void avanzarEstado() {
@@ -74,7 +117,28 @@ public class Torneo {
     }
 
     public void generarPartido(Club clubLocal, Club clubVisitante, LocalDate fecha) {
-        // TODO: crear partido del fixture.
+        if (clubLocal != null && clubVisitante != null) {
+            Partido nuevoPartido = new Partido(clubLocal, clubVisitante, fecha);
+            this.partidos.add(nuevoPartido);
+        }
+    }
+
+    public void agregarSancion(Sancion sancion) {
+        sanciones.add(sancion);
+    }
+
+    public List<Sancion> getSanciones() {
+        return new ArrayList<>(sanciones);
+    }
+
+    public boolean jugadorEstaSuspendido(Jugador jugador) {
+        for (Sancion sancion : sanciones) {
+            if (sancion.getJugador().equals(jugador)
+                    && sancion.estaVigente()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public EstadoTorneo getEstado() {
