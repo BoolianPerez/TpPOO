@@ -1,6 +1,6 @@
 package com.tppoo.persistencia;
 
-import com.tppoo.model.ModeloSistema;
+import com.tppoo.Modelo.ModeloSistema;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
