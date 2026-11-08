@@ -1,74 +1,68 @@
 package com.tppoo.model.torneos_entidades;
 
+import com.tppoo.model.excepciones.EventoInvalidoException;
+
 public class Gol extends Evento {
-    private TipoGol tipo;
-    private Club clubAnotador;
+    private final TipoGol tipo;
+    private boolean sumoLocal;
 
-    public Gol() {
-        super();
-    }
-
-    public Gol(Jugador jugadorInvolucrado, Partido partido, int minuto, TipoGol tipo, Club clubAnotador) {
+    public Gol(Jugador jugadorInvolucrado, Partido partido, int minuto, TipoGol tipo) {
         super(jugadorInvolucrado, partido, minuto);
         this.tipo = tipo;
-        this.clubAnotador = clubAnotador;
     }
 
 
     @Override
-    public void procesar() {
-        if (estaProcesado()) {
-            return;
-        }
-
+    protected void aplicar() {
         Partido partido = getPartido();
         Jugador jugador = getJugadorInvolucrado();
 
-        if (partido == null || clubAnotador == null || tipo == null) {
-            throw new IllegalStateException(
-                    "El gol debe tener partido, club anotador y tipo asociados."
-            );
+        if (partido == null || jugador == null || tipo == null) {
+            throw new EventoInvalidoException("El gol debe tener partido, jugador y tipo.");
         }
 
-        boolean esLocal = clubAnotador.equals(partido.getClubLocal());
-        boolean esVisitante = clubAnotador.equals(partido.getClubVisitante());
+        // El club del jugador se obtiene de su inscripción en el torneo (Experto).
+        Club club = partido.clubDe(jugador);
+        boolean esLocal = partido.getClubLocal().equals(club);
+        boolean esVisitante = partido.getClubVisitante().equals(club);
 
         if (!esLocal && !esVisitante) {
-            throw new IllegalArgumentException(
-                    "El club anotador no participa en este partido."
-            );
+            throw new EventoInvalidoException("El jugador no pertenece a ninguno de los clubes del partido.");
         }
 
-        boolean golParaLocal =
-                (tipo != TipoGol.EN_CONTRA && esLocal)
-                        || (tipo == TipoGol.EN_CONTRA && esVisitante);
+        // Un gol en contra suma al rival.
+        sumoLocal = (tipo != TipoGol.EN_CONTRA) == esLocal;
 
-        if (golParaLocal) {
-            partido.setMarcadorLocal(partido.getMarcadorLocal() + 1);
+        if (sumoLocal) {
+            partido.sumarGolLocal();
         } else {
-            partido.setMarcadorVisitante(partido.getMarcadorVisitante() + 1);
+            partido.sumarGolVisitante();
         }
 
-        if (jugador != null && tipo != TipoGol.EN_CONTRA) {
+        if (tipo != TipoGol.EN_CONTRA) {
             jugador.setGoles(jugador.getGoles() + 1);
         }
+    }
 
-        marcarProcesado();
+    @Override
+    protected void revertir() {
+        if (sumoLocal) {
+            getPartido().restarGolLocal();
+        } else {
+            getPartido().restarGolVisitante();
+        }
+        if (tipo != TipoGol.EN_CONTRA) {
+            Jugador jugador = getJugadorInvolucrado();
+            jugador.setGoles(jugador.getGoles() - 1);
+        }
+    }
+
+    @Override
+    void notificarA(ObservadorPartido observador) {
+        observador.onGol(getPartido(), this);
     }
 
     public TipoGol getTipo() {
         return tipo;
-    }
-
-    public void setTipo(TipoGol tipo) {
-        this.tipo = tipo;
-    }
-
-    public Club getClubAnotador() {
-        return clubAnotador;
-    }
-
-    public void setClubAnotador(Club clubAnotador) {
-        this.clubAnotador = clubAnotador;
     }
 }

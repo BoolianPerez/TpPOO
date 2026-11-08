@@ -1,140 +1,102 @@
 package com.tppoo.model.competencia;
 
-import com.tppoo.model.torneos_entidades.*;
+import com.tppoo.model.torneos_entidades.Club;
+import com.tppoo.model.torneos_entidades.EstadoPartido;
+import com.tppoo.model.torneos_entidades.Partido;
+import com.tppoo.model.torneos_entidades.Torneo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
+/**
+ * Simula N veces los partidos restantes (goles ~ Poisson con el xG promedio de cada club)
+ * y devuelve la fracción de simulaciones en que el club alcanza el puntaje de corte.
+ * Todo lo costoso se calcula UNA vez antes del bucle.
+ */
 public class ProyeccionPorSimulacion implements EstrategiaProyeccion {
-    private ServicioProyecciones servicioProyecciones;
+    public static final int SIMULACIONES_POR_DEFECTO = 10000;
 
-    private static final int CANTIDAD_SIMULACIONES = 10000;
+    private final ServicioReportes servicioReportes;
+    private final CalculadorXG calculadorXG;
+    private final Random random;
+    private final int puntajeCorte;
+    private final int simulaciones;
 
-    public ProyeccionPorSimulacion(ServicioProyecciones servicioProyecciones) {
-        this.servicioProyecciones = servicioProyecciones;
+    public ProyeccionPorSimulacion(ServicioReportes servicioReportes, CalculadorXG calculadorXG,
+                                   Random random, int puntajeCorte) {
+        this(servicioReportes, calculadorXG, random, puntajeCorte, SIMULACIONES_POR_DEFECTO);
+    }
+
+    public ProyeccionPorSimulacion(ServicioReportes servicioReportes, CalculadorXG calculadorXG,
+                                   Random random, int puntajeCorte, int simulaciones) {
+        if (simulaciones <= 0) {
+            throw new IllegalArgumentException("La cantidad de simulaciones debe ser positiva.");
+        }
+        this.servicioReportes = servicioReportes;
+        this.calculadorXG = calculadorXG;
+        this.random = random;
+        this.puntajeCorte = puntajeCorte;
+        this.simulaciones = simulaciones;
     }
 
     @Override
     public double calcularProbabilidad(Torneo torneo, Club club) {
+        List<PosicionTabla> base = servicioReportes.calcularTablaPosiciones(torneo);
+        buscarPosicion(base, club); // valida que el club pertenezca al torneo
+
+        List<Partido> pendientes = new ArrayList<>();
+        Map<Club, Double> xgPromedio = new HashMap<>();
+        for (Partido partido : torneo.getPartidos()) {
+            if (partido.getEstado() == EstadoPartido.PROGRAMADO) {
+                pendientes.add(partido);
+                xgPromedio.computeIfAbsent(partido.getClubLocal(), c -> calculadorXG.calcularXGPromedio(c, torneo));
+                xgPromedio.computeIfAbsent(partido.getClubVisitante(), c -> calculadorXG.calcularXGPromedio(c, torneo));
+            }
+        }
 
         int favorables = 0;
-
-        for (int i = 0; i < CANTIDAD_SIMULACIONES; i++) {
-
-            List<PosicionTabla> tabla = copiarTabla(torneo);
-
-            ejecutarSimulacion(torneo, tabla);
-
-            PosicionTabla posicion = buscarPosicion(tabla, club);
-
-            if (posicion.getPuntos() >= PUNTAJE_CORTE) {
+        for (int i = 0; i < simulaciones; i++) {
+            List<PosicionTabla> tabla = new ArrayList<>();
+            for (PosicionTabla p : base) {
+                tabla.add(p.copiar());
+            }
+            for (Partido partido : pendientes) {
+                int golesLocal = simularGoles(xgPromedio.get(partido.getClubLocal()));
+                int golesVisitante = simularGoles(xgPromedio.get(partido.getClubVisitante()));
+                buscarPosicion(tabla, partido.getClubLocal()).registrarResultado(golesLocal, golesVisitante);
+                buscarPosicion(tabla, partido.getClubVisitante()).registrarResultado(golesVisitante, golesLocal);
+            }
+            if (buscarPosicion(tabla, club).getPuntos() >= puntajeCorte) {
                 favorables++;
             }
         }
-
-        return (double) favorables / CANTIDAD_SIMULACIONES;
+        return (double) favorables / simulaciones;
     }
 
+    /** Muestreo de Poisson (algoritmo de Knuth). */
     private int simularGoles(double xG) {
-
-        if (xG <= 0){
+        if (xG <= 0) {
             return 0;
         }
-
-        double L = Math.exp(-xG);
+        double limite = Math.exp(-xG);
         int k = 0;
         double p = 1.0;
-
         do {
             k++;
-            p *= Math.random();
-        } while (p > L);
-
+            p *= random.nextDouble();
+        } while (p > limite);
         return k - 1;
     }
 
-    private int[] simularPartido(double xGLocal, double xGVisitante) {
-
-        int golesLocal = simularGoles(xGLocal);
-        int golesVisitante = simularGoles(xGVisitante);
-
-        return new int[]{golesLocal, golesVisitante};
-    }
-
-    private List<Partido> obtenerPartidosPendientes(Torneo torneo) {
-
-        List<Partido> pendientes = new ArrayList<>();
-
-        for (Partido partido : torneo.getPartidos()) {
-
-            if (partido.getEstado() == EstadoPartido.PROGRAMADO) {
-                pendientes.add(partido);
-            }
-        }
-
-        return pendientes;
-    }
-
-    private List<PosicionTabla> copiarTabla(Torneo torneo) {
-
-        ServicioReportes servicioReportes = new ServicioReportes();
-
-        List<PosicionTabla> tablaOriginal = servicioReportes.calcularTablaPosiciones(torneo);
-
-        List<PosicionTabla> tablaCopia = new ArrayList<>();
-
-        for (PosicionTabla posicion : tablaOriginal) {
-
-            PosicionTabla copia = new PosicionTabla(
-                    posicion.getClub(),
-                    posicion.getPartidosJugados(),
-                    posicion.getPuntos(),
-                    posicion.getGolesAFavor(),
-                    posicion.getGolesEnContra()
-            );
-
-            tablaCopia.add(copia);
-        }
-
-        return tablaCopia;
-    }
-
-    private void ejecutarSimulacion(Torneo torneo, List<PosicionTabla> tabla) {
-
-        List<Partido> pendientes = obtenerPartidosPendientes(torneo);
-
-        for (Partido partido : pendientes) {
-
-            Club local = partido.getClubLocal();
-            Club visitante = partido.getClubVisitante();
-
-            double xGLocal =
-                    servicioProyecciones.calcularXGPromedio(local, torneo);
-
-            double xGVisitante =
-                    servicioProyecciones.calcularXGPromedio(visitante, torneo);
-
-            int[] resultado = simularPartido(xGLocal, xGVisitante);
-
-            PosicionTabla posicionLocal = buscarPosicion(tabla, local);
-            PosicionTabla posicionVisitante = buscarPosicion(tabla, visitante);
-
-            posicionLocal.registrarResultado(resultado[0], resultado[1]);
-            posicionVisitante.registrarResultado(resultado[1], resultado[0]);
-        }
-    }
-
     private PosicionTabla buscarPosicion(List<PosicionTabla> tabla, Club club) {
-
         for (PosicionTabla posicion : tabla) {
             if (posicion.getClub().equals(club)) {
                 return posicion;
             }
         }
-
-        throw new IllegalStateException("No se encontró el club en la tabla.");
+        throw new IllegalArgumentException("El club no pertenece al torneo.");
     }
-
-
-
 }

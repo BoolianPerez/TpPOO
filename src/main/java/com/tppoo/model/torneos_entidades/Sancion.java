@@ -1,28 +1,24 @@
 package com.tppoo.model.torneos_entidades;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Sancion {
+public class Sancion implements Serializable {
 
-    private Jugador jugador;
-    private Torneo torneo;
+    private final Jugador jugador;
+    private final Torneo torneo;
     private int partidosPendientes;
-    private String motivo;
-    private Partido partidoOrigen;
+    private final String motivo;
+    private final Partido partidoOrigen;
 
-    public Sancion(Jugador jugador, Torneo torneo,
-                   int partidosPendientes, String motivo,
-                   Partido partidoOrigen) {
+    public Sancion(Jugador jugador, Torneo torneo, int partidosPendientes, String motivo, Partido partidoOrigen) {
         this.jugador = Objects.requireNonNull(jugador);
         this.torneo = Objects.requireNonNull(torneo);
         this.partidoOrigen = Objects.requireNonNull(partidoOrigen);
 
         if (partidosPendientes <= 0) {
-            throw new IllegalArgumentException(
-                    "La sanción debe tener al menos un partido pendiente."
-            );
+            throw new IllegalArgumentException("La sanción debe tener al menos un partido pendiente.");
         }
-
         this.partidosPendientes = partidosPendientes;
         this.motivo = Objects.requireNonNull(motivo);
     }

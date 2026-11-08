@@ -2,27 +2,29 @@ package com.tppoo.model.servicios;
 
 import com.tppoo.model.torneos_entidades.Club;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class Suscriptor {
+/** Quien recibe avisos: elige qué clubes sigue y por qué canales. No sabe enviar nada. */
+public class Suscriptor implements Serializable {
     private String nombre;
-    private List<Club> clubesQueSigue = new ArrayList<>();
-    private List<CanalNotificacion> canalesHabituales = new ArrayList<>();
-
-    public Suscriptor() {
-    }
+    private String email;
+    private String telefono;
+    private String tokenApp;
+    private final List<Club> clubesQueSigue = new ArrayList<>();
+    private final List<CanalNotificacion> canalesHabilitados = new ArrayList<>();
 
     public Suscriptor(String nombre) {
         this.nombre = nombre;
     }
 
-    public void recibirNotificacion(String mensaje) {
-        if (mensaje != null && !mensaje.isEmpty()) {
-            for (CanalNotificacion canal : canalesHabituales) {
-                canal.enviar(mensaje);
-            }
-        }
+    public Suscriptor(String nombre, String email, String telefono, String tokenApp) {
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
+        this.tokenApp = tokenApp;
     }
 
     public void seguirClub(Club club) {
@@ -35,15 +37,27 @@ public class Suscriptor {
         clubesQueSigue.remove(club);
     }
 
+    public boolean sigueA(Club club) {
+        return club != null && clubesQueSigue.contains(club);
+    }
 
+    /** Habilita un canal. No admite dos canales del mismo tipo (CanalSms, CanalCorreo, ...). */
     public void agregarCanal(CanalNotificacion canal) {
-        if (canal != null && !canalesHabituales.contains(canal)) {
-            canalesHabituales.add(canal);
+        if (canal == null) {
+            return;
         }
+        for (CanalNotificacion existente : canalesHabilitados) {
+            if (existente.getClass() == canal.getClass()) {
+                return;
+            }
+        }
+        canalesHabilitados.add(canal);
     }
 
     public void removerCanal(CanalNotificacion canal) {
-        canalesHabituales.remove(canal);
+        if (canal != null) {
+            canalesHabilitados.removeIf(c -> c.getClass() == canal.getClass());
+        }
     }
 
     public String getNombre() {
@@ -54,19 +68,35 @@ public class Suscriptor {
         this.nombre = nombre;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getTokenApp() {
+        return tokenApp;
+    }
+
+    public void setTokenApp(String tokenApp) {
+        this.tokenApp = tokenApp;
+    }
+
     public List<Club> getClubesQueSigue() {
-        return clubesQueSigue;
+        return Collections.unmodifiableList(clubesQueSigue);
     }
 
-    public void setClubesQueSigue(List<Club> clubesQueSigue) {
-        this.clubesQueSigue = clubesQueSigue;
-    }
-
-    public List<CanalNotificacion> getCanalesHabituales() {
-        return canalesHabituales;
-    }
-
-    public void setCanalesHabituales(List<CanalNotificacion> canalesHabituales) {
-        this.canalesHabituales = canalesHabituales;
+    public List<CanalNotificacion> getCanalesHabilitados() {
+        return Collections.unmodifiableList(canalesHabilitados);
     }
 }

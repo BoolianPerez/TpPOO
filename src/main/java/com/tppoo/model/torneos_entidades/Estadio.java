@@ -1,25 +1,33 @@
 package com.tppoo.model.torneos_entidades;
 
+import com.tppoo.model.excepciones.EstadioNoDisponibleException;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class Estadio {
+public class Estadio implements Serializable {
+    /** RN03: diferencia mínima entre dos partidos del mismo estadio. */
+    public static final long MINUTOS_MINIMOS_ENTRE_PARTIDOS = 180;
+
     private String nombre;
     private int capacidad;
     private String calle;
     private int numero;
     private String ciudad;
     private String provincia;
-    private List<String> ubicacionesDisponibles = new ArrayList<>();
-
-    private List<Partido> partidos = new ArrayList<>();
+    /** Clima o tipo de césped habituales (ej.: "Lluvioso", "Césped sintético"). */
+    private List<String> condicionesHabituales = new ArrayList<>();
+    private final List<Partido> partidos = new ArrayList<>();
 
     public Estadio() {
     }
 
     public Estadio(String nombre, int capacidad, String calle, int numero, String ciudad, String provincia) {
+        validarCapacidad(capacidad);
         this.nombre = nombre;
         this.capacidad = capacidad;
         this.calle = calle;
@@ -28,26 +36,54 @@ public class Estadio {
         this.provincia = provincia;
     }
 
+    private static void validarCapacidad(int capacidad) {
+        if (capacidad <= 0) {
+            throw new IllegalArgumentException("La capacidad del estadio debe ser mayor a cero.");
+        }
+    }
+
     public boolean validarDisponibilidadHoraria(LocalDateTime fechaHoraNueva) {
+        return validarDisponibilidadHoraria(fechaHoraNueva, null);
+    }
+
+    /** Verifica la disponibilidad ignorando un partido (útil al reprogramarlo). */
+    public boolean validarDisponibilidadHoraria(LocalDateTime fechaHoraNueva, Partido ignorar) {
         if (fechaHoraNueva == null) {
             return false;
         }
-
         for (Partido partido : partidos) {
-            long diferenciaMinutos = Math.abs(ChronoUnit.MINUTES.between(partido.getFechaHora(), fechaHoraNueva));
-
-            if (diferenciaMinutos < 180) {
+            if (partido == ignorar || partido.getFechaHora() == null) {
+                continue;
+            }
+            long diferencia = Math.abs(ChronoUnit.MINUTES.between(partido.getFechaHora(), fechaHoraNueva));
+            if (diferencia < MINUTOS_MINIMOS_ENTRE_PARTIDOS) {
                 return false;
             }
         }
         return true;
     }
 
-    public void agregarPartido(Partido partido) {
-        if (validarDisponibilidadHoraria(partido.getFechaHora())) {
-            this.partidos.add(partido);
-        } else {
-            throw new IllegalStateException("RN03: El estadio no puede alojar un partido con menos de 3 horas de diferencia respecto a otro.");
+    /** Reserva el estadio para el partido. RN03: lanza si hay otro partido a menos de 3 horas. */
+    public void reservar(Partido partido) {
+        if (partido == null || partido.getFechaHora() == null) {
+            throw new IllegalArgumentException("El partido debe tener fecha y hora para reservar el estadio.");
+        }
+        if (!validarDisponibilidadHoraria(partido.getFechaHora(), partido)) {
+            throw new EstadioNoDisponibleException(
+                    "RN03: El estadio " + nombre + " no puede alojar un partido con menos de 3 horas de diferencia respecto a otro.");
+        }
+        if (!partidos.contains(partido)) {
+            partidos.add(partido);
+        }
+    }
+
+    public void liberar(Partido partido) {
+        partidos.remove(partido);
+    }
+
+    public void agregarCondicion(String condicion) {
+        if (condicion != null && !condicion.isBlank() && !condicionesHabituales.contains(condicion)) {
+            condicionesHabituales.add(condicion);
         }
     }
 
@@ -64,6 +100,7 @@ public class Estadio {
     }
 
     public void setCapacidad(int capacidad) {
+        validarCapacidad(capacidad);
         this.capacidad = capacidad;
     }
 
@@ -99,19 +136,11 @@ public class Estadio {
         this.provincia = provincia;
     }
 
-    public List<String> getUbicacionesDisponibles() {
-        return ubicacionesDisponibles;
-    }
-
-    public void setUbicacionesDisponibles(List<String> ubicacionesDisponibles) {
-        this.ubicacionesDisponibles = ubicacionesDisponibles;
+    public List<String> getCondicionesHabituales() {
+        return Collections.unmodifiableList(condicionesHabituales);
     }
 
     public List<Partido> getPartidos() {
-        return partidos;
-    }
-
-    public void setPartidos(List<Partido> partidos) {
-        this.partidos = partidos;
+        return Collections.unmodifiableList(partidos);
     }
 }

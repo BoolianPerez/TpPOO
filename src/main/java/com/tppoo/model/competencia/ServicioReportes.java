@@ -1,106 +1,73 @@
 package com.tppoo.model.competencia;
 
-import com.tppoo.model.torneos_entidades.*;
+import com.tppoo.model.torneos_entidades.Club;
+import com.tppoo.model.torneos_entidades.EstadoPartido;
+import com.tppoo.model.torneos_entidades.Evento;
+import com.tppoo.model.torneos_entidades.Gol;
+import com.tppoo.model.torneos_entidades.InscripcionClub;
+import com.tppoo.model.torneos_entidades.Jugador;
+import com.tppoo.model.torneos_entidades.Partido;
+import com.tppoo.model.torneos_entidades.TipoGol;
+import com.tppoo.model.torneos_entidades.Torneo;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ServicioReportes {
+
+    /**
+     * Tabla de posiciones. Solo cuentan partidos finalizados (RN14).
+     * Desempate: diferencia de gol, goles a favor y, si persiste, resultado entre los clubes empatados.
+     */
     public List<PosicionTabla> calcularTablaPosiciones(Torneo torneo) {
         List<PosicionTabla> tabla = new ArrayList<>();
-
         for (InscripcionClub inscripcion : torneo.getInscripciones()) {
-
-            PosicionTabla posicion = new PosicionTabla(inscripcion.getClub(), 0, 0, 0, 0);
-
-            tabla.add(posicion);
+            tabla.add(new PosicionTabla(inscripcion.getClub(), 0, 0, 0, 0));
         }
 
         for (Partido partido : torneo.getPartidos()) {
-
             if (partido.getEstado() != EstadoPartido.FINALIZADO) {
                 continue;
             }
-
-            PosicionTabla posicionLocal = buscarPosicion(tabla, partido.getClubLocal());
-
-            PosicionTabla posicionVisitante = buscarPosicion(tabla, partido.getClubVisitante());
-
-            posicionLocal.registrarResultado(partido.getMarcadorLocal(), partido.getMarcadorVisitante());
-
-            posicionVisitante.registrarResultado(partido.getMarcadorVisitante(), partido.getMarcadorLocal());
-
+            buscarPosicion(tabla, partido.getClubLocal())
+                    .registrarResultado(partido.getMarcadorLocal(), partido.getMarcadorVisitante());
+            buscarPosicion(tabla, partido.getClubVisitante())
+                    .registrarResultado(partido.getMarcadorVisitante(), partido.getMarcadorLocal());
         }
-        tabla.sort((p1, p2) -> compararPosiciones(p1, p2, torneo));
 
-        return tabla;
+        tabla.sort(Comparator.naturalOrder()); // orden natural de PosicionTabla
+
+        // Los grupos empatados en los 3 criterios se resuelven con una mini-tabla entre ellos.
+        List<PosicionTabla> resultado = new ArrayList<>();
+        int i = 0;
+        while (i < tabla.size()) {
+            int j = i + 1;
+            while (j < tabla.size() && tabla.get(i).compareTo(tabla.get(j)) == 0) {
+                j++;
+            }
+            List<PosicionTabla> grupo = new ArrayList<>(tabla.subList(i, j));
+            if (grupo.size() > 1) {
+                desempatarEntreSi(grupo, torneo);
+            }
+            resultado.addAll(grupo);
+            i = j;
+        }
+        return resultado;
     }
 
     private PosicionTabla buscarPosicion(List<PosicionTabla> tabla, Club club) {
-
         for (PosicionTabla posicion : tabla) {
-
             if (posicion.getClub().equals(club)) {
                 return posicion;
             }
         }
-
-        throw new IllegalStateException(
-                "No se encontró una posición para el club: " + club.getNombre()
-        );
-    }
-
-    private int compararPosiciones(PosicionTabla p1, PosicionTabla p2, Torneo torneo){
-        if (p1.getPuntos() != p2.getPuntos()) {
-            return Integer.compare(p2.getPuntos(), p1.getPuntos());
-        }
-
-        if (p1.calcularDiferenciaGoles() != p2.calcularDiferenciaGoles()) {
-            return Integer.compare(p2.calcularDiferenciaGoles(), p1.calcularDiferenciaGoles());
-        }
-
-        if (p1.getGolesAFavor() != p2.getGolesAFavor()) {
-            return Integer.compare(p2.getGolesAFavor(), p1.getGolesAFavor());
-        }
-
-        return desempatarPorEnfrentamientosDirectos(p1.getClub(), p2.getClub(), torneo);
-    }
-
-    private int desempatarPorEnfrentamientosDirectos(Club club1, Club club2, Torneo torneo){
-        int golesClub1 = 0;
-        int golesClub2 = 0;
-        int amarillasClub1 = 0;
-        int amarillasClub2 = 0;
-
-        for (Partido partido : torneo.getPartidos()) {
-
-            if (partido.getEstado() != EstadoPartido.FINALIZADO) {
-                continue;
-            }
-
-            if ((partido.getClubLocal().equals(club1) && partido.getClubVisitante().equals(club2)) ||
-                    (partido.getClubLocal().equals(club2) && partido.getClubVisitante().equals(club1))) {
-
-                if (partido.getClubLocal().equals(club1)) {
-                    golesClub1 += partido.getMarcadorLocal();
-                    golesClub2 += partido.getMarcadorVisitante();
-                } else {
-                    golesClub1 += partido.getMarcadorVisitante();
-                    golesClub2 += partido.getMarcadorLocal();
-                }
-
-                amarillasClub1 += contarAmarillas(partido, club1, torneo);
-                amarillasClub2 += contarAmarillas(partido, club2, torneo);
-            }
-        }
-
-        if (golesClub1 != golesClub2) {
-            return Integer.compare(golesClub2, golesClub1);
-        }
-
-        return Integer.compare(amarillasClub1, amarillasClub2);
+        throw new IllegalStateException("No se encontró una posición para el club: " + club.getNombre());
     }
     private int contarAmarillas(Partido partido, Club club, Torneo torneo){
         int cantidad = 0;
@@ -122,77 +89,116 @@ public class ServicioReportes {
             }
         }
 
-        return cantidad;
-    }
-
-    public List<Jugador> obtenerGoleadores(Torneo torneo) {
-        Map<Jugador, Integer> golesPorJugador = new HashMap<>();
+    /** Ordena un grupo de clubes empatados según los partidos jugados entre ellos (comparador personalizado). */
+    private void desempatarEntreSi(List<PosicionTabla> grupo, Torneo torneo) {
+        Set<Club> clubes = new HashSet<>();
+        Map<Club, int[]> mini = new HashMap<>(); // [puntos, golesAFavor, golesEnContra]
+        for (PosicionTabla p : grupo) {
+            clubes.add(p.getClub());
+            mini.put(p.getClub(), new int[3]);
+        }
 
         for (Partido partido : torneo.getPartidos()) {
+            if (partido.getEstado() != EstadoPartido.FINALIZADO
+                    || !clubes.contains(partido.getClubLocal()) || !clubes.contains(partido.getClubVisitante())) {
+                continue;
+            }
+            acumular(mini.get(partido.getClubLocal()), partido.getMarcadorLocal(), partido.getMarcadorVisitante());
+            acumular(mini.get(partido.getClubVisitante()), partido.getMarcadorVisitante(), partido.getMarcadorLocal());
+        }
 
+        grupo.sort((a, b) -> {
+            int[] ma = mini.get(a.getClub());
+            int[] mb = mini.get(b.getClub());
+            if (ma[0] != mb[0]) {
+                return Integer.compare(mb[0], ma[0]);
+            }
+            int difA = ma[1] - ma[2];
+            int difB = mb[1] - mb[2];
+            if (difA != difB) {
+                return Integer.compare(difB, difA);
+            }
+            if (ma[1] != mb[1]) {
+                return Integer.compare(mb[1], ma[1]);
+            }
+            return String.valueOf(a.getClub().getNombre()).compareToIgnoreCase(String.valueOf(b.getClub().getNombre()));
+        });
+    }
+
+    private void acumular(int[] fila, int golesAFavor, int golesEnContra) {
+        fila[1] += golesAFavor;
+        fila[2] += golesEnContra;
+        if (golesAFavor > golesEnContra) {
+            fila[0] += 3;
+        } else if (golesAFavor == golesEnContra) {
+            fila[0] += 1;
+        }
+    }
+
+    /** Goles por jugador: cuentan a favor y de penal, no los en contra (RN15). Ignora goles anulados. */
+    private Map<Jugador, Integer> contarGoles(Torneo torneo) {
+        Map<Jugador, Integer> goles = new HashMap<>();
+        for (Partido partido : torneo.getPartidos()) {
             if (partido.getEstado() != EstadoPartido.FINALIZADO) {
                 continue;
             }
-
             for (Evento evento : partido.getEventos()) {
-
-                if (evento instanceof Gol gol &&
-                        gol.getTipo() != TipoGol.EN_CONTRA) {
-
-                    Jugador jugador = gol.getJugadorInvolucrado();
-
-                    if (jugador != null) {
-                        golesPorJugador.put(jugador, golesPorJugador.getOrDefault(jugador, 0) + 1);
-                    }
+                if (evento instanceof Gol gol && !gol.estaAnulado() && gol.getTipo() != TipoGol.EN_CONTRA) {
+                    goles.merge(gol.getJugadorInvolucrado(), 1, Integer::sum);
                 }
             }
         }
+        return goles;
+    }
 
+    /** Ranking completo de goleadores, de más a menos goles (desempata por apellido). */
+    public Map<Jugador, Integer> obtenerRankingGoleadores(Torneo torneo) {
+        List<Map.Entry<Jugador, Integer>> entradas = new ArrayList<>(contarGoles(torneo).entrySet());
+        entradas.sort(Map.Entry.<Jugador, Integer>comparingByValue().reversed()
+                .thenComparing(e -> String.valueOf(e.getKey().getApellido())));
+        Map<Jugador, Integer> ranking = new LinkedHashMap<>();
+        for (Map.Entry<Jugador, Integer> e : entradas) {
+            ranking.put(e.getKey(), e.getValue());
+        }
+        return ranking;
+    }
+
+    /** Jugadores con más goles (puede haber varios empatados). */
+    public List<Jugador> obtenerGoleadores(Torneo torneo) {
+        Map<Jugador, Integer> ranking = obtenerRankingGoleadores(torneo);
         List<Jugador> goleadores = new ArrayList<>();
-        int maxGoles = 0;
-
-        for (Map.Entry<Jugador, Integer> entrada : golesPorJugador.entrySet()) {
-
-            int goles = entrada.getValue();
-
-            if (goles > maxGoles) {
-                maxGoles = goles;
+        int maximo = 0;
+        for (Map.Entry<Jugador, Integer> e : ranking.entrySet()) {
+            if (e.getValue() > maximo) {
+                maximo = e.getValue();
                 goleadores.clear();
-                goleadores.add(entrada.getKey());
-
-            } else if (goles == maxGoles) {
-                goleadores.add(entrada.getKey());
+            }
+            if (e.getValue() == maximo) {
+                goleadores.add(e.getKey());
             }
         }
-
         return goleadores;
     }
 
+    /** Club(es) con menor promedio de goles recibidos por partido. */
     public List<Club> calcularVallaMenosVencida(Torneo torneo) {
         List<PosicionTabla> tabla = calcularTablaPosiciones(torneo);
-        List<Club> mejoresClubes = new ArrayList<>();
-
+        List<Club> mejores = new ArrayList<>();
         double menorPromedio = Double.MAX_VALUE;
 
         for (PosicionTabla posicion : tabla) {
-
             if (posicion.getPartidosJugados() == 0) {
                 continue;
             }
-
-            double promedio = (double) posicion.getGolesEnContra()
-                    / posicion.getPartidosJugados();
-
+            double promedio = (double) posicion.getGolesEnContra() / posicion.getPartidosJugados();
             if (promedio < menorPromedio) {
                 menorPromedio = promedio;
-                mejoresClubes.clear();
-                mejoresClubes.add(posicion.getClub());
-
+                mejores.clear();
+                mejores.add(posicion.getClub());
             } else if (Double.compare(promedio, menorPromedio) == 0) {
-                mejoresClubes.add(posicion.getClub());
+                mejores.add(posicion.getClub());
             }
         }
-
-        return mejoresClubes;
+        return mejores;
     }
 }

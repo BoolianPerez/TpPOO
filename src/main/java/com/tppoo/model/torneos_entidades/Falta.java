@@ -1,29 +1,23 @@
 package com.tppoo.model.torneos_entidades;
 
-public class Falta extends Evento {
+import com.tppoo.model.excepciones.EventoInvalidoException;
 
-    public Falta() {
-        super();
-    }
+public class Falta extends Evento {
 
     public Falta(Jugador jugadorInvolucrado, Partido partido, int minuto) {
         super(jugadorInvolucrado, partido, minuto);
     }
 
     @Override
-    public void procesar() {
-        if (estaProcesado()) {
-            return;
-        }
-
+    protected void aplicar() {
         if (getJugadorInvolucrado() == null || getPartido() == null) {
-            throw new IllegalStateException(
-                    "La falta debe tener un jugador y un partido asociados."
-            );
+            throw new EventoInvalidoException("La falta debe tener un jugador y un partido asociados.");
         }
-
         getJugadorInvolucrado().incrementarFaltasCometidas();
+    }
 
-        marcarProcesado();
+    @Override
+    protected void revertir() {
+        getJugadorInvolucrado().decrementarFaltasCometidas();
     }
 }

@@ -10,7 +10,8 @@ public class Entrenador extends Persona {
     public Entrenador() {
     }
 
-    public Entrenador(String dni, String nombre, String apellido, LocalDate fechaNacimiento, String licencia, EspecialidadEntrenador especialidad) {
+    public Entrenador(String dni, String nombre, String apellido, LocalDate fechaNacimiento,
+                      String licencia, EspecialidadEntrenador especialidad, boolean licenciaActiva) {
         super(dni, nombre, apellido, fechaNacimiento);
         this.licencia = licencia;
         this.especialidad = especialidad;
@@ -21,6 +22,10 @@ public class Entrenador extends Persona {
     public String obtenerDetalle() {
         return "Entrenador: " + super.obtenerDetalle();
     }
+    public boolean validarLicencia() {
+        return this.licenciaActiva && this.licencia != null && !this.licencia.trim().isEmpty();
+    }
+
     public boolean validarLicencia() {
         return this.licenciaActiva && this.licencia != null && !this.licencia.trim().isEmpty();
     }
@@ -41,7 +46,11 @@ public class Entrenador extends Persona {
         this.especialidad = especialidad;
     }
 
-    public boolean isLicenciaActiva() {return licenciaActiva;}
+    public boolean isLicenciaActiva() {
+        return licenciaActiva;
+    }
 
-    public void setLicenciaActiva(boolean licenciaActiva) {this.licenciaActiva = licenciaActiva;}
+    public void setLicenciaActiva(boolean licenciaActiva) {
+        this.licenciaActiva = licenciaActiva;
+    }
 }
