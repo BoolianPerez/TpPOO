@@ -1,6 +1,9 @@
 package com.tppoo.model.torneos_entidades;
 
-public class Sponsor {
+import java.io.Serializable;
+import java.util.Objects;
+
+public class Sponsor implements Serializable {
     private String nombre;
     private String marca;
     private String logo;
@@ -12,6 +15,23 @@ public class Sponsor {
         this.nombre = nombre;
         this.marca = marca;
         this.logo = logo;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Sponsor)) {
+            return false;
+        }
+        Sponsor otro = (Sponsor) o;
+        return Objects.equals(nombre, otro.nombre) && Objects.equals(marca, otro.marca);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre, marca);
     }
 
     public String getNombre() {

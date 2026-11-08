@@ -1,11 +1,9 @@
 package com.tppoo.model.torneos_entidades;
 
-public class Remate extends Evento {
-    private ZonaRemate zona;
+import com.tppoo.model.excepciones.EventoInvalidoException;
 
-    public Remate() {
-        super();
-    }
+public class Remate extends Evento {
+    private final ZonaRemate zona;
 
     public Remate(Jugador jugadorInvolucrado, Partido partido, int minuto, ZonaRemate zona) {
         super(jugadorInvolucrado, partido, minuto);
@@ -13,36 +11,26 @@ public class Remate extends Evento {
     }
 
     @Override
-    public void procesar() {
-        double valorXG = calcularXG();
-        if (getJugadorInvolucrado() != null) {
-            getJugadorInvolucrado().acumularXG(valorXG);
+    protected void aplicar() {
+        if (getPartido() == null || getJugadorInvolucrado() == null) {
+            throw new EventoInvalidoException("El remate debe tener un partido y un jugador asociados.");
+        }
+        if (zona == null) {
+            throw new EventoInvalidoException("El remate debe tener una zona definida.");
         }
     }
 
+    @Override
+    protected void revertir() {
+        // El remate no modifica ningún contador: queda marcado como anulado y las proyecciones lo ignoran.
+    }
+
+    /** xG del remate según su zona (los valores viven en {@link ZonaRemate}). */
     public double calcularXG() {
-        if (zona == null) {
-            return 0.0;
-        }
-        switch (zona) {
-            case AREA_CHICA:
-                return 0.40;
-            case AREA_GRANDE:
-                return 0.15;
-            case FUERA_AREA:
-                return 0.04;
-            case PENAL:
-                return 0.76;
-            default:
-                return 0.0;
-        }
+        return zona == null ? 0.0 : zona.getXg();
     }
 
     public ZonaRemate getZona() {
         return zona;
-    }
-
-    public void setZona(ZonaRemate zona) {
-        this.zona = zona;
     }
 }

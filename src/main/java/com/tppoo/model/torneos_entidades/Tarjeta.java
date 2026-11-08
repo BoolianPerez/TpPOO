@@ -1,11 +1,20 @@
 package com.tppoo.model.torneos_entidades;
 
-public class Tarjeta extends Evento {
-    private ColorTarjeta color;
+import com.tppoo.model.excepciones.EventoInvalidoException;
 
-    public Tarjeta() {
-        super();
-    }
+/**
+ * Tarjeta amarilla o roja.
+ *
+ * Supuestos documentados:
+ *  - Cada 5 amarillas acumuladas en el torneo generan 1 fecha de suspensión (RN12).
+ *  - La doble amarilla en un partido equivale a una roja: expulsa y suspende 1 fecha.
+ *  - La doble amarilla se notifica como tarjeta roja.
+ */
+public class Tarjeta extends Evento {
+    private final ColorTarjeta color;
+    private boolean provocoExpulsion = false;
+    private Sancion sancionPorAcumulacion;
+    private Sancion sancionPorExpulsion;
 
     public Tarjeta(Jugador jugadorInvolucrado, Partido partido, int minuto, ColorTarjeta color) {
         super(jugadorInvolucrado, partido, minuto);
@@ -13,32 +22,92 @@ public class Tarjeta extends Evento {
     }
 
     @Override
-    public void procesar() {
-        if (getJugadorInvolucrado() != null) {
-            Jugador jugador = getJugadorInvolucrado();
-            jugador.agregarTarjeta(this);
+    protected void aplicar() {
+        Jugador jugador = getJugadorInvolucrado();
+        Partido partido = getPartido();
 
-            if (color == ColorTarjeta.AMARILLA) {
-                long amarillasEnPartido = getPartido().getEventos().stream()
-                        .filter(e -> e instanceof Tarjeta && e.getJugadorInvolucrado() == jugador)
-                        .map(e -> (Tarjeta) e)
-                        .filter(t -> t.getColor() == ColorTarjeta.AMARILLA)
-                        .count();
-
-                if (amarillasEnPartido >= 2) {
-                    jugador.marcarExpulsado();
-                }
-            } else if (color == ColorTarjeta.ROJA) {
-                jugador.marcarExpulsado();
-            }
+        if (jugador == null || partido == null) {
+            throw new EventoInvalidoException("La tarjeta debe tener un jugador y un partido asociados.");
         }
+        if (color == null) {
+            throw new EventoInvalidoException("La tarjeta debe tener un color.");
+        }
+
+        Torneo torneo = partido.getTorneo();
+        InscripcionClub inscripcion = torneo.buscarInscripcion(jugador);
+
+        if (inscripcion == null) {
+            throw new EventoInvalidoException("El jugador no pertenece a ningún club del torneo.");
+        }
+
+        jugador.registrarTarjeta();
+
+        if (color == ColorTarjeta.AMARILLA) {
+            int acumuladas = inscripcion.registrarAmarilla(jugador);
+
+            if (acumuladas % 5 == 0) {
+                sancionPorAcumulacion = new Sancion(jugador, torneo, 1, "Acumulación de cinco amarillas", partido);
+                torneo.agregarSancion(sancionPorAcumulacion);
+            }
+
+            // Se cuentan las amarillas ya registradas (este evento todavía no está en la lista del partido).
+            long previas = partido.getEventos().stream()
+                    .filter(e -> e instanceof Tarjeta)
+                    .map(e -> (Tarjeta) e)
+                    .filter(t -> !t.estaAnulado())
+                    .filter(t -> t.getColor() == ColorTarjeta.AMARILLA)
+                    .filter(t -> jugador.equals(t.getJugadorInvolucrado()))
+                    .count();
+
+            if (previas >= 1) {
+                expulsar(partido, torneo, jugador, "Doble amarilla");
+            }
+        } else {
+            expulsar(partido, torneo, jugador, "Tarjeta roja directa");
+        }
+    }
+
+    private void expulsar(Partido partido, Torneo torneo, Jugador jugador, String motivo) {
+        partido.expulsarJugador(jugador);
+        provocoExpulsion = true;
+        sancionPorExpulsion = new Sancion(jugador, torneo, 1, motivo, partido);
+        torneo.agregarSancion(sancionPorExpulsion);
+    }
+
+    @Override
+    protected void revertir() {
+        Jugador jugador = getJugadorInvolucrado();
+        Partido partido = getPartido();
+        Torneo torneo = partido.getTorneo();
+
+        jugador.quitarTarjeta();
+
+        if (color == ColorTarjeta.AMARILLA) {
+            torneo.buscarInscripcion(jugador).deshacerAmarilla(jugador);
+        }
+        if (sancionPorAcumulacion != null) {
+            torneo.quitarSancion(sancionPorAcumulacion);
+        }
+        if (sancionPorExpulsion != null) {
+            torneo.quitarSancion(sancionPorExpulsion);
+        }
+        if (provocoExpulsion) {
+            partido.readmitirJugador(jugador);
+        }
+    }
+
+    @Override
+    void notificarA(ObservadorPartido observador) {
+        if (provocoExpulsion) {
+            observador.onTarjetaRoja(getPartido(), this);
+        }
+    }
+
+    public boolean provocoExpulsion() {
+        return provocoExpulsion;
     }
 
     public ColorTarjeta getColor() {
         return color;
-    }
-
-    public void setColor(ColorTarjeta color) {
-        this.color = color;
     }
 }

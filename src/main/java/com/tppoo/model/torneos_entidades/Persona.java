@@ -1,8 +1,10 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.Period;
 
-public abstract class Persona {
+public abstract class Persona implements Serializable {
     private String dni;
     private String nombre;
     private String apellido;
@@ -18,8 +20,33 @@ public abstract class Persona {
         this.fechaNacimiento = fechaNacimiento;
     }
 
+    public int calcularEdad() {
+        if (fechaNacimiento == null) {
+            return 0;
+        }
+        return Period.between(fechaNacimiento, LocalDate.now()).getYears();
+    }
+
     public String obtenerDetalle() {
         return nombre + " " + apellido;
+    }
+
+    /** Dos personas del mismo tipo con el mismo DNI son la misma persona. */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Persona otra = (Persona) o;
+        return dni != null && dni.equals(otra.dni);
+    }
+
+    @Override
+    public int hashCode() {
+        return dni == null ? System.identityHashCode(this) : dni.hashCode();
     }
 
     public String getDni() {

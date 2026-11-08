@@ -1,6 +1,9 @@
-package com.tppoo.model.personas
+package com.tppoo.model.torneos_entidades;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Jugador extends Persona {
     private String posicion;
@@ -9,6 +12,8 @@ public class Jugador extends Persona {
     private int partidosJugados;
     private int goles;
     private int tarjetas;
+    private int faltasCometidas;
+    private final List<Contrato> historialContratos = new ArrayList<>();
 
     public Jugador() {
     }
@@ -26,8 +31,44 @@ public class Jugador extends Persona {
         return "Jugador: " + super.obtenerDetalle();
     }
 
-    public void registrarPagoPorClub(Contrato contrato) {
-        // TODO: registrar pago asociado al contrato del jugador.
+    /** RN07: el historial y las estadísticas se conservan aunque el jugador quede libre. */
+    public void registrarPasoPorClub(Contrato contrato) {
+        if (contrato != null && !historialContratos.contains(contrato)) {
+            historialContratos.add(contrato);
+        }
+    }
+
+    public Contrato getContratoVigenteEn(LocalDate fecha) {
+        for (Contrato contrato : historialContratos) {
+            if (contrato.esVigenteEn(fecha)) {
+                return contrato;
+            }
+        }
+        return null;
+    }
+
+    /** Club actual según el contrato vigente hoy, o null si está libre. */
+    public Club getClubActual() {
+        Contrato contrato = getContratoVigenteEn(LocalDate.now());
+        return contrato == null ? null : contrato.getClub();
+    }
+
+    public List<Contrato> getHistorialContratos() {
+        return Collections.unmodifiableList(historialContratos);
+    }
+
+    public void incrementarPartidosJugados() {
+        this.partidosJugados++;
+    }
+
+    public void registrarTarjeta() {
+        this.tarjetas++;
+    }
+
+    public void quitarTarjeta() {
+        if (tarjetas > 0) {
+            tarjetas--;
+        }
     }
 
     public String getPosicion() {
@@ -58,10 +99,6 @@ public class Jugador extends Persona {
         return partidosJugados;
     }
 
-    public void setPartidosJugados(int partidosJugados) {
-        this.partidosJugados = partidosJugados;
-    }
-
     public int getGoles() {
         return goles;
     }
@@ -74,7 +111,17 @@ public class Jugador extends Persona {
         return tarjetas;
     }
 
-    public void setTarjetas(int tarjetas) {
-        this.tarjetas = tarjetas;
+    public int getFaltasCometidas() {
+        return faltasCometidas;
+    }
+
+    public void incrementarFaltasCometidas() {
+        this.faltasCometidas++;
+    }
+
+    public void decrementarFaltasCometidas() {
+        if (faltasCometidas > 0) {
+            faltasCometidas--;
+        }
     }
 }
