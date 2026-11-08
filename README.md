@@ -8,8 +8,7 @@ Aplicación Java de consola con menú para administrar torneos de fútbol: clube
 entrenadores; contratos y transferencias; inscripción de clubes y jugadores en un torneo; generación del fixture; asignación
 de terna arbitral y estadio; carga de nómina y titulares; registro de eventos del partido en vivo (goles, tarjetas, remates,
 faltas, cambios y anulaciones); sanciones; notificaciones a suscriptores por varios canales; tabla de posiciones, ranking de
-goleadores, valla menos vencida, xG y probabilidad de clasificación (por puntos o por simulación). Todas las reglas de negocio
-RN01 a RN17 de la propuesta C están implementadas. Los datos se guardan en un archivo y se conservan entre ejecuciones.
+goleadores, valla menos vencida, xG y probabilidad de clasificación (por puntos o por simulación). Los datos se guardan en un archivo y se conservan entre ejecuciones.
 
 ## Integrantes
 | Integrante | Legajo |
