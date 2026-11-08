@@ -65,6 +65,7 @@ public class Tarjeta extends Evento {
         } else {
             expulsar(partido, torneo, jugador, "Tarjeta roja directa");
         }
+        marcarProcesado();
     }
 
     private void expulsar(Partido partido, Torneo torneo, Jugador jugador, String motivo) {

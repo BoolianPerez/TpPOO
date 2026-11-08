@@ -20,6 +20,13 @@ public class Contrato implements Serializable {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
+    public boolean esVigenteEn(LocalDate fecha) {
+        if (fechaInicio == null) return false;
+        if (fechaFin == null) {
+            return !fecha.isBefore(fechaInicio);
+        }
+        return (!fecha.isBefore(fechaInicio) && !fecha.isAfter(fechaFin));
+    }
 
     public boolean esVigenteEn(LocalDate fecha) {
         if (fecha == null) {

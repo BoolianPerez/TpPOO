@@ -69,6 +69,25 @@ public class ServicioReportes {
         }
         throw new IllegalStateException("No se encontró una posición para el club: " + club.getNombre());
     }
+    private int contarAmarillas(Partido partido, Club club, Torneo torneo){
+        int cantidad = 0;
+
+        for (Evento evento : partido.getEventos()) {
+
+            if (evento instanceof Tarjeta tarjeta &&
+                    tarjeta.getColor() == ColorTarjeta.AMARILLA) {
+
+                for (InscripcionClub inscripcion : torneo.getInscripciones()) {
+
+                    if (inscripcion.getClub().equals(club) &&
+                            inscripcion.tieneJugador(evento.getJugadorInvolucrado())) {
+
+                        cantidad++;
+                        break;
+                    }
+                }
+            }
+        }
 
     /** Ordena un grupo de clubes empatados según los partidos jugados entre ellos (comparador personalizado). */
     private void desempatarEntreSi(List<PosicionTabla> grupo, Torneo torneo) {

@@ -78,4 +78,12 @@ public abstract class Evento implements Serializable {
     public boolean estaAnulado() {
         return anulado;
     }
+
+    public boolean estaProcesado() {
+        return procesado;
+    }
+
+    protected void marcarProcesado() {
+        this.procesado = true;
+    }
 }

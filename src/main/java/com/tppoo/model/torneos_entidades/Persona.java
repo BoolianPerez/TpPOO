@@ -19,6 +19,18 @@ public abstract class Persona implements Serializable {
         this.apellido = apellido;
         this.fechaNacimiento = fechaNacimiento;
     }
+    public int calcularEdad() {
+        if (fechaNacimiento == null) {
+            return 0;
+        }
+        LocalDate hoy = LocalDate.now();
+        int edad = hoy.getYear() - fechaNacimiento.getYear();
+
+        if (hoy.getDayOfYear() < fechaNacimiento.getDayOfYear()) {
+            edad--;
+        }
+        return edad;
+    }
 
     public int calcularEdad() {
         if (fechaNacimiento == null) {

@@ -24,6 +24,7 @@ public class Jugador extends Persona {
         this.posicion = posicion;
         this.numeroCamiseta = numeroCamiseta;
         this.valorMercado = valorMercado;
+        faltasCometidas = 0;
     }
 
     @Override

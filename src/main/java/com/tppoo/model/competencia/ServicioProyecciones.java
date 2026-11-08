@@ -26,6 +26,8 @@ public class ServicioProyecciones {
         return calculadorXG.calcularXGPromedio(club, torneo);
     }
 
+
+
     public EstrategiaProyeccion getEstrategia() {
         return estrategia;
     }

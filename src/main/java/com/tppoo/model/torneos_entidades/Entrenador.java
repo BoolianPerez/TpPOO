@@ -22,6 +22,9 @@ public class Entrenador extends Persona {
     public String obtenerDetalle() {
         return "Entrenador: " + super.obtenerDetalle();
     }
+    public boolean validarLicencia() {
+        return this.licenciaActiva && this.licencia != null && !this.licencia.trim().isEmpty();
+    }
 
     public boolean validarLicencia() {
         return this.licenciaActiva && this.licencia != null && !this.licencia.trim().isEmpty();

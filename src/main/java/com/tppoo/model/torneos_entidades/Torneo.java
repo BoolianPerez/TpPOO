@@ -31,6 +31,7 @@ public class Torneo implements Serializable {
     private final List<Patrocinio> patrocinios = new ArrayList<>();
 
     public Torneo() {
+        this.estado = EstadoTorneo.PLANIFICADO;
     }
 
     public Torneo(String nombre, LocalDate fechaInicio, LocalDate fechaFin, boolean internacional) {

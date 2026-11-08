@@ -288,6 +288,9 @@ public class Partido implements Serializable {
                 fallosDeObservadores++;
             }
         }
+
+        this.eventos.add(evento);
+        evento.procesar();
     }
 
     public void finalizar() {

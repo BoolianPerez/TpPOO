@@ -16,11 +16,23 @@ public class Arbitro extends Persona {
         super(dni, nombre, apellido, fechaNacimiento);
         this.colegio = colegio;
         this.categoria = categoria;
+        this.clubHincha = clubHincha;
     }
 
     @Override
     public String obtenerDetalle() {
         return "Arbitro: " + super.obtenerDetalle();
+    }
+    public boolean verificarDisponibilidad(LocalDate fechaPartido, String nombreClubOponente, List<LocalDate> fechasPartidosAsignados) {
+        if (this.clubHincha != null && this.clubHincha.equalsIgnoreCase(nombreClubOponente)) {
+            return false;
+        }
+
+        if (fechasPartidosAsignados != null && fechasPartidosAsignados.contains(fechaPartido)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

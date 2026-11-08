@@ -11,6 +11,7 @@ public class Gol extends Evento {
         this.tipo = tipo;
     }
 
+
     @Override
     protected void aplicar() {
         Partido partido = getPartido();

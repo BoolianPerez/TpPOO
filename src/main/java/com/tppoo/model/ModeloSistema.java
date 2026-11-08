@@ -1,5 +1,9 @@
 package com.tppoo.model;
 
+import com.tppoo.model.torneos_entidades.Club;
+import com.tppoo.model.torneos_entidades.Partido;
+import com.tppoo.model.torneos_entidades.Torneo;
+
 import com.tppoo.model.servicios.ServicioNotificaciones;
 import com.tppoo.model.servicios.Suscriptor;
 import com.tppoo.model.torneos_entidades.Arbitro;
